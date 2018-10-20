@@ -1,0 +1,76 @@
+from random import randint
+from math import floor, ceil
+
+
+def gen_question(level):
+    level = floor(level)
+
+    if level == 1: # w/answer a % b = ?
+        y = randint(5,10)
+        x = y + randint(2,y)
+        ans = x % y
+        question = f"{x} mod {y} = {ans}"
+
+    elif level == 2: # no answer
+        x, y = randint(2,20), randint(2,10)
+        ans = x % y
+        question = f"{x} mod {y} = ?"
+
+    elif level == 3: # x+y first
+        x, y, z = randint(2,20), randint(2,20), randint(2,10)
+        ans = (x + y) % z
+        question = f"({x} + {y}) mod {z} = ?"
+
+    elif level == 4: # x*y first
+        x, y, z = randint(2,20), randint(2,20), randint(2,10)
+        ans = (x * y) % z
+        question = f"({x} * {y}) mod {z} = ?"
+
+    elif level == 5:  # x*y first
+        x, y, z, w = randint(2,20), randint(2,20), randint(2,20), randint(2,10)
+        ans = (x * y) % (z + w)
+        question = f"({x} * {y}) mod ({z} + {w}) = ?"
+
+    else: # Fail gracefully
+        return gen_question(5)
+
+    return ans, question
+
+
+for i in range(1, 6):
+    print()
+    print(f"Level {i}")
+    for j in range(3):
+        answer, question = gen_question(i)
+        print(question)
+
+
+
+
+def update_level(level, correct):
+    if correct:
+        delta = +1/3
+    else:
+        delta = -1/6
+    if floor(level) < floor(level + delta):
+        delta += 1/3
+    level += delta
+
+    if ceil(level) - level < 0.001:
+        level = ceil(level)
+
+    level = max(1.0, level)
+
+    if floor(level) == 6:
+        print("Congratulations, you completed all the levels!")
+        import sys
+        sys.exit()
+
+    return level
+
+
+level = 1
+while True:
+    print(floor(level))
+    inp = input("Pass? (y/n) ")
+    level = update_level(level, inp.lower() == 'y')
