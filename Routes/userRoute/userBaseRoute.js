@@ -501,8 +501,9 @@ var submitAbility=
         validate: {
             headers: UniversalFunctions.authorizationHeaderObj,
             payload: {
-                initialAbility:Joi.number().required(),
-                finalAbility:Joi.number().required()
+                initialAbility:Joi.string().required(),
+                finalAbility:Joi.string().required(),
+                quizLevel:Joi.string().required()
             },
             failAction: UniversalFunctions.failActionFunction
         },

@@ -20,8 +20,9 @@ var user = new Schema({
         ],
         required: true
     },
-    initialAbility:{type:Number},
-    finalAbility:{type:Number},
+    initialAbility:{type:String},
+    finalAbility:{type:String},
+    quizLevel:{type:String},
     registrationDate: {type: Date, default: Date.now},
     codeUpdatedAt: {type: Date, default: Date.now, required: true}
 });

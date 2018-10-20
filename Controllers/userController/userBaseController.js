@@ -1372,7 +1372,8 @@ var submitAbility = function(userData,payloadData,callback){
             var updateData = {
                 $set:{
                     initialAbility:payloadData.initialAbility,
-                    finalAbility:payloadData.finalAbility
+                    finalAbility:payloadData.finalAbility,
+                    quizLevel:payloadData.quizLevel
                 }
             }
             var options = {lean: true};
