@@ -12,6 +12,16 @@ var user = new Schema({
     code:{type: String, trim: true},
     OTPCode: {type: String, trim: true},
     emailVerified: {type: Boolean, default: true},
+    surveyType: {
+        type: String,
+        enum: [
+            Config.APP_CONSTANTS.DATABASE.SURVEY_TYPE.STEM,
+            Config.APP_CONSTANTS.DATABASE.SURVEY_TYPE.NONSTEM
+        ],
+        required: true
+    },
+    initialAbility:{type:Number},
+    finalAbility:{type:Number},
     registrationDate: {type: Date, default: Date.now},
     codeUpdatedAt: {type: Date, default: Date.now, required: true}
 });

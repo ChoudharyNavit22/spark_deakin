@@ -42,6 +42,10 @@ var DATABASE = {
     },
     USER_ROLES:{
         USER:"USER"
+    },
+    SURVEY_TYPE:{
+        STEM:"STEM",
+        NONSTEM:"NONSTEM"
     }
 };
 

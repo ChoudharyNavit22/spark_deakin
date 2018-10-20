@@ -8,6 +8,7 @@ var UploadManager = require('../../Lib/uploadManager');
 var TokenManager = require('../../Lib/TokenManager');
 var CodeGenerator = require('../../Lib/CodeGenerator');
 var ERROR = UniversalFunctions.CONFIG.APP_CONSTANTS.STATUS_MSG.ERROR;
+var SURVEY_TYPE_CHECK = UniversalFunctions.CONFIG.APP_CONSTANTS.DATABASE.SURVEY_TYPE;
 var _ = require('underscore');
 
 var createUser = function (payloadData,callback) {
@@ -64,6 +65,13 @@ var createUser = function (payloadData,callback) {
         },
         function (cb) {
             //Insert Into DB
+            var random_boolean = Math.random() >= 0.5;
+            if(random_boolean == true){
+                dataToSave.surveyType = UniversalFunctions.CONFIG.APP_CONSTANTS.DATABASE.SURVEY_TYPE.STEM;
+            }
+            else{
+                dataToSave.surveyType = UniversalFunctions.CONFIG.APP_CONSTANTS.DATABASE.SURVEY_TYPE.NONSTEM;
+            }
             dataToSave.OTPCode = uniqueCode;
             dataToSave.registrationDate = new Date().toISOString();
             Service.UserService.createUser(dataToSave, function (err, customerDataFromDB) {
@@ -1068,7 +1076,7 @@ function LevelQuestion(level){
 
 var submitQuestion = function(userData,payloadData,callback){
     var customerData;
-    var customerLevel;
+    var customerLevel,customerLevelnew;
     var result_ques;
     var previous_level;
     var new_level_upd;
@@ -1091,7 +1099,12 @@ var submitQuestion = function(userData,payloadData,callback){
                     if(data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN)
                     else {
                         customerData = data && data[0] || null;
-                        new_level_upd = updateLevelFunc(payloadData.level,payloadData.correct)
+                        if(customerData.surveyType == SURVEY_TYPE_CHECK.NONSTEM){
+                            new_level_upd = updateLevelFunc(payloadData.level,payloadData.correct)
+                        }
+                        else{
+                            new_level_upd = Math.floor(Math.random() * 5) + 1;
+                        }
                         console.log(">>>>>>>>>",new_level_upd);
                         cb()
                     }
@@ -1099,86 +1112,196 @@ var submitQuestion = function(userData,payloadData,callback){
             });
         },
         function(cb){
-            if(new_level_upd<6){
-                var query = {
-                    userId: userData.id
-                };
-                var options = {lean: true};
-                Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
-                    if (err) {
-                        cb(err);
-                    } else {
-                        var customerLevelnew = dataLevel && dataLevel[0] || null;
-                        previous_level = customerLevelnew.level;
-                        cb()
-                    }
-                });
-            }
-            else{
-                cb();
-            }
-            
-        },
-        function(cb){
-            if(new_level_upd<6){
-                var query = {
-                    userId: userData.id
-                };
-                var setQuery = {
-                    $set: {level: new_level_upd,endDate:Date.now()},
-                    $push: {
-                        levelSubDet:{
-                            levelId:previous_level,
-                            timeToSolve:payloadData.timeTaken
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+                if(new_level_upd<6){
+                    var query = {
+                        userId: userData.id
+                    };
+                    var options = {lean: true};
+                    Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            customerLevelnew = dataLevel && dataLevel[0] || null;
+                            previous_level = customerLevelnew.level;
+                            if(customerLevelnew.questionsAttempted == 20){
+                                new_level_upd = 6; 
+                            }
+                            cb()
                         }
-                    }
-                };
-                var options = {lean: true};
-                Service.LevelService.updateLevel(query, setQuery, options, function (err, dataLevel) {
-                    if (err) {
-                        cb(err);
-                    } else {
-                        console.log(dataLevel);
-                        cb()
-                    }
-                });
-            }
-            else{
-                cb();
-            }
-        },
-        function(cb){
-            if(new_level_upd<6){
-                var query = {
-                    userId: userData.id
-                };
-                var options = {lean: true};
-                Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
-                    if (err) {
-                        cb(err);
-                    } else {
-                        customerLevel = dataLevel && dataLevel[0] || null;
-                        cb()
-                    }
-                });
-            }
-            else{
-                cb()
-            }
-        },
-        function(cb){
-            if(new_level_upd<6){
-                result_ques = LevelQuestion(customerLevel.level);
-                console.log(result_ques);
-                cb();
-            }
-            else{
-                customerLevel = {};
-                customerLevel.level = new_level_upd;
-                result_ques = {
-                    message : "Congratulations, you completed all the levels!"
+                    });
                 }
-                cb()
+                else{
+                    cb();
+                }
+            }
+            else{
+                if(new_level_upd<6){
+                    var query = {
+                        userId: userData.id
+                    };
+                    var options = {lean: true};
+                    Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            customerLevelnew = dataLevel && dataLevel[0] || null;
+                            previous_level = customerLevelnew.level;
+                            cb()
+                        }
+                    });
+                }
+                else{
+                    cb();
+                }
+            }
+        },
+        function(cb){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+                if(new_level_upd<6){
+                    var query = {
+                        userId: userData.id
+                    };
+                    var setQuery = {
+                        $set: {
+                            level: new_level_upd,
+                            endDate:Date.now(),
+                            questionsAttempted:customerLevelnew.questionsAttempted+1,
+                            score:customerLevelnew.score+payloadData.correct
+                        },
+                        $push: {
+                            levelSubDet:{
+                                levelId:previous_level,
+                                timeToSolve:payloadData.timeTaken,
+                                response_ans:payloadData.correct
+                            }
+                        }
+                    };
+                    var options = {lean: true};
+                    Service.LevelService.updateLevel(query, setQuery, options, function (err, dataLevel) {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            console.log(dataLevel);
+                            cb()
+                        }
+                    });
+                }
+                else{
+                    cb();
+                }
+            }
+            else{
+                if(new_level_upd<6){
+                    var query = {
+                        userId: userData.id
+                    };
+                    var setQuery = {
+                        $set: {
+                            level: new_level_upd,
+                            endDate:Date.now(),
+                            questionsAttempted:customerLevelnew.questionsAttempted+1,
+                            score:customerLevelnew.score+payloadData.correct
+                        },
+                        $push: {
+                            levelSubDet:{
+                                levelId:previous_level,
+                                timeToSolve:payloadData.timeTaken,
+                                response_ans:payloadData.correct
+                            }
+                        }
+                    };
+                    var options = {lean: true};
+                    Service.LevelService.updateLevel(query, setQuery, options, function (err, dataLevel) {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            console.log(dataLevel);
+                            cb()
+                        }
+                    });
+                }
+                else{
+                    cb();
+                }
+            }
+        },
+        function(cb){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+                if(new_level_upd<6){
+                    var query = {
+                        userId: userData.id
+                    };
+                    var options = {lean: true};
+                    Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            customerLevel = dataLevel && dataLevel[0] || null;
+                            cb()
+                        }
+                    });
+                }
+                else{
+                    cb()
+                }
+            }
+            else{
+                if(new_level_upd<6){
+                    var query = {
+                        userId: userData.id
+                    };
+                    var options = {lean: true};
+                    Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            customerLevel = dataLevel && dataLevel[0] || null;
+                            cb()
+                        }
+                    });
+                }
+                else{
+                    cb()
+                }
+            }
+        },
+        function(cb){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+                if(new_level_upd<6){
+                    result_ques = LevelQuestion(new_level_upd);
+                    result_ques.message = "";
+                    console.log(result_ques);
+                    cb();
+                }
+                else{
+                    customerLevel = {};
+                    customerLevel.level = new_level_upd;
+                    result_ques = {
+                        ques : "",
+                        ans : "",
+                        message : "Congratulations, you completed all the levels!"
+                    }
+                    cb()
+                }
+            }
+            else{
+                if(new_level_upd<6){
+                    result_ques = LevelQuestion(customerLevel.level);
+                    result_ques.message = "";
+                    console.log(result_ques);
+                    cb();
+                }
+                else{
+                    customerLevel = {};
+                    customerLevel.level = new_level_upd;
+                    result_ques = {
+                        ques : "",
+                        ans : "",
+                        message : "Congratulations, you completed all the levels!"
+                    }
+                    cb()
+                }
             }
         }
 
@@ -1211,6 +1334,7 @@ function updateLevelFunc(level,correct){
     if(Math.floor(level) == 6){
         new_level = 6;
     }
+    new_level = Math.max(1.0,new_level);
     return new_level;
 }
 

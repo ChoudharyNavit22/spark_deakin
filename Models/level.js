@@ -11,9 +11,12 @@ var level = new Schema({
     level: {type: Number,required: true, default:1},
     startDate: {type: Date, default: Date.now},
     endDate: {type: Date, default: Date.now, required: true},
+    questionsAttempted:{type: Number,required: true, default:0},
+    score:{type: Number,required: true, default:0},
     levelSubDet:[{
         levelId: {type: Number,required: true},
-        timeToSolve:{type: Number,required: true}
+        timeToSolve:{type: Number,required: true},
+        response_ans:{type: Number,required: true}
     }]
 });
 
