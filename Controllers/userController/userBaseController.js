@@ -1112,7 +1112,7 @@ var submitQuestion = function(userData,payloadData,callback){
             });
         },
         function(cb){
-            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.NONSTEM){
                 if(new_level_upd<6){
                     var query = {
                         userId: userData.id
@@ -1157,7 +1157,7 @@ var submitQuestion = function(userData,payloadData,callback){
             }
         },
         function(cb){
-            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.NONSTEM){
                 if(new_level_upd<6){
                     var query = {
                         userId: userData.id
@@ -1227,7 +1227,7 @@ var submitQuestion = function(userData,payloadData,callback){
             }
         },
         function(cb){
-            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.NONSTEM){
                 if(new_level_upd<6){
                     var query = {
                         userId: userData.id
@@ -1267,7 +1267,7 @@ var submitQuestion = function(userData,payloadData,callback){
             }
         },
         function(cb){
-            if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
+            if(customerData.surveyType == SURVEY_TYPE_CHECK.NONSTEM){
                 if(new_level_upd<6){
                     result_ques = LevelQuestion(new_level_upd);
                     result_ques.message = "";
