@@ -1338,6 +1338,58 @@ function updateLevelFunc(level,correct){
     return new_level;
 }
 
+var submitAbility = function(userData,payloadData,callback){
+    var customerData;
+    var updatedCustomer;
+    async.series([
+        function(cb){
+            var query = {
+                _id: userData.id
+            };
+            var projection = {
+                __v:0,
+                password:0,
+                accessToken:0,
+                codeUpdatedAt:0
+            };
+            var options = {lean: true};
+            Service.UserService.getUser(query, projection, options, function (err, data) {
+                if (err) {
+                    cb(err);
+                } else {
+                    if(data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN)
+                    else {
+                        customerData = data && data[0] || null;
+                        cb()
+                    }
+                }
+            });
+        },
+        function(cb){
+            var query = {
+                _id: userData.id
+            };
+            var updateData = {
+                $set:{
+                    initialAbility:payloadData.initialAbility,
+                    finalAbility:payloadData.finalAbility
+                }
+            }
+            var options = {lean: true};
+            Service.UserService.updateUser(query,updateData, options, function (err, dataLevel) {
+                if (err) {
+                    cb(err);
+                } else {
+                    updatedCustomer = dataLevel;
+                    cb()
+                }
+            });
+        }], function (err, result) {
+        if(err) callback(err)
+        else callback(null,updatedCustomer)
+    })
+}
+
 module.exports = {
     createUser:createUser,
     //verifyOTP:verifyOTP,
@@ -1352,5 +1404,6 @@ module.exports = {
     //forgetPassword:forgetPassword,
     //resetPassword:resetPassword,
     generateQuestion:generateQuestion,
-    submitQuestion:submitQuestion
+    submitQuestion:submitQuestion,
+    submitAbility:submitAbility
 };

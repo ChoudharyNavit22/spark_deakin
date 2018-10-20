@@ -476,6 +476,45 @@ var submitQuestion =
 
 }
 
+var submitAbility=
+{
+    /* *****************access token login****************** */
+    method: 'POST',
+    path: '/api/user/submitAbility',
+    handler: function (request, reply) {
+        var userData = request.auth && request.auth.credentials && request.auth.credentials.userData || null;
+        var payloadData = request.payload;
+        Controller.UserBaseController.submitAbility(userData,payloadData, function (err, data) {
+            console.log('%%%%%%%%%%%%%%%', err, data)
+            if (!err) {
+                return reply(UniversalFunctions.sendSuccess(null, data));
+            }
+            else {
+                return reply(UniversalFunctions.sendError(err));
+            }
+        });
+    },
+    config: {
+        description: 'submit ability',
+        tags: ['api', 'user'],
+        auth: 'UserAuth',
+        validate: {
+            headers: UniversalFunctions.authorizationHeaderObj,
+            payload: {
+                initialAbility:Joi.number().required(),
+                finalAbility:Joi.number().required()
+            },
+            failAction: UniversalFunctions.failActionFunction
+        },
+        plugins: {
+            'hapi-swagger': {
+                responseMessages: UniversalFunctions.CONFIG.APP_CONSTANTS.swaggerDefaultResponseMessages
+            }
+        }
+    }
+
+}
+
 var UserBaseRoute =
     [
         userRegister,
@@ -489,7 +528,8 @@ var UserBaseRoute =
         getProfile,
         changePassword,
         generateQuestion,
-        submitQuestion
+        submitQuestion,
+        submitAbility
         //forgotPassword,
         //resetPassword
     ]
