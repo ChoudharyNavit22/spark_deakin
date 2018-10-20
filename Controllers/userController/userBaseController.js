@@ -1099,7 +1099,7 @@ var submitQuestion = function(userData,payloadData,callback){
                     if(data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN)
                     else {
                         customerData = data && data[0] || null;
-                        if(customerData.surveyType == SURVEY_TYPE_CHECK.NONSTEM){
+                        if(customerData.surveyType == SURVEY_TYPE_CHECK.STEM){
                             new_level_upd = updateLevelFunc(payloadData.level,payloadData.correct)
                         }
                         else{
