@@ -987,6 +987,11 @@ var generateQuestion = function(userData,callback){
         function(cb){
             result_ques = LevelQuestion(customerLevel.level);
             console.log(result_ques);
+            if(customerLevel.level == 6){
+                result_ques = {
+                    message : "Congratulations, you completed all the levels!"
+                }
+            }
             cb();
         }
 
@@ -1000,6 +1005,7 @@ var generateQuestion = function(userData,callback){
 }
 
 function LevelQuestion(level){
+    level = Math.floor(level);
     var x,y,z,w,ans;
     var quiz = {};
     
@@ -1064,6 +1070,8 @@ var submitQuestion = function(userData,payloadData,callback){
     var customerData;
     var customerLevel;
     var result_ques;
+    var previous_level;
+    var new_level_upd;
     async.series([
         function(cb){
             var query = {
@@ -1083,52 +1091,95 @@ var submitQuestion = function(userData,payloadData,callback){
                     if(data.length == 0) cb(ERROR.INCORRECT_ACCESSTOKEN)
                     else {
                         customerData = data && data[0] || null;
+                        new_level_upd = updateLevelFunc(payloadData.level,payloadData.correct)
+                        console.log(">>>>>>>>>",new_level_upd);
                         cb()
                     }
                 }
             });
         },
         function(cb){
-            var query = {
-                userId: userData.id
-            };
-            var setQuery = {
-                $set: {level: payloadData.level + 1},
-                $push: {
-                    levelSubDet:{
-                        levelId:payloadData.level,
-                        timeToSolve:payloadData.timeTaken
+            if(new_level_upd<6){
+                var query = {
+                    userId: userData.id
+                };
+                var options = {lean: true};
+                Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
+                    if (err) {
+                        cb(err);
+                    } else {
+                        var customerLevelnew = dataLevel && dataLevel[0] || null;
+                        previous_level = customerLevelnew.level;
+                        cb()
                     }
-                }
-            };
-            var options = {lean: true};
-            Service.LevelService.updateLevel(query, setQuery, options, function (err, dataLevel) {
-                if (err) {
-                    cb(err);
-                } else {
-                    console.log(dataLevel);
-                    cb()
-                }
-            });
+                });
+            }
+            else{
+                cb();
+            }
+            
         },
         function(cb){
-            var query = {
-                userId: userData.id
-            };
-            var options = {lean: true};
-            Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
-                if (err) {
-                    cb(err);
-                } else {
-                    customerLevel = dataLevel && dataLevel[0] || null;
-                    cb()
-                }
-            });
+            if(new_level_upd<6){
+                var query = {
+                    userId: userData.id
+                };
+                var setQuery = {
+                    $set: {level: new_level_upd,endDate:Date.now()},
+                    $push: {
+                        levelSubDet:{
+                            levelId:previous_level,
+                            timeToSolve:payloadData.timeTaken
+                        }
+                    }
+                };
+                var options = {lean: true};
+                Service.LevelService.updateLevel(query, setQuery, options, function (err, dataLevel) {
+                    if (err) {
+                        cb(err);
+                    } else {
+                        console.log(dataLevel);
+                        cb()
+                    }
+                });
+            }
+            else{
+                cb();
+            }
         },
         function(cb){
-            result_ques = LevelQuestion(customerLevel.level);
-            console.log(result_ques);
-            cb();
+            if(new_level_upd<6){
+                var query = {
+                    userId: userData.id
+                };
+                var options = {lean: true};
+                Service.LevelService.getLevel(query, {}, options, function (err, dataLevel) {
+                    if (err) {
+                        cb(err);
+                    } else {
+                        customerLevel = dataLevel && dataLevel[0] || null;
+                        cb()
+                    }
+                });
+            }
+            else{
+                cb()
+            }
+        },
+        function(cb){
+            if(new_level_upd<6){
+                result_ques = LevelQuestion(customerLevel.level);
+                console.log(result_ques);
+                cb();
+            }
+            else{
+                customerLevel = {};
+                customerLevel.level = new_level_upd;
+                result_ques = {
+                    message : "Congratulations, you completed all the levels!"
+                }
+                cb()
+            }
         }
 
     ], function (err, result) {
@@ -1144,13 +1195,23 @@ function updateLevelFunc(level,correct){
     var delta = 0;
     var new_level = level;
     if(correct == 1){
-        delta = 1/3;
+        delta = 1/4;
         new_level = level + delta;
     }
-    else{
-        delta = -1/6;
+    else if(correct == 0){
+        delta = -1/8;
         new_level = level + delta;
     }
+    console.log("???????",new_level);
+    if(Math.floor(level) < Math.floor(new_level)){
+        delta = 1/4;
+        new_level = level + delta;
+    }
+    console.log("!!!!!!!!!!!",new_level);
+    if(Math.floor(level) == 6){
+        new_level = 6;
+    }
+    return new_level;
 }
 
 module.exports = {

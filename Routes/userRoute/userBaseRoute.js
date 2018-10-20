@@ -488,8 +488,8 @@ var UserBaseRoute =
         //logoutCustomer,
         getProfile,
         changePassword,
-        generateQuestion
-        //submitQuestion
+        generateQuestion,
+        submitQuestion
         //forgotPassword,
         //resetPassword
     ]
